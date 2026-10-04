@@ -1,13 +1,11 @@
-#to ensure pacman package is installed on device before running script (e.g., new or colleague computer)
-if (!requireNamespace(pacman)) install.packages("pacman")
-
+library(pacman)
 pacman::p_load(
   #project and file mgmt
   here, #file paths relative to R project root folder
   rio, #import/export of many types of data
   #general data mgmt
   tidyverse, #several packages for tidy data manipulation
-     viridis, # colour-blind friendly palettes
+  viridis, # colour-blind friendly palettes
   dplyr,
   lubridate,
   readr,
@@ -27,4 +25,9 @@ pacman::p_load(
   rcartocolor
   
 )
+
+#import clean nhanes csv data for BIOS640 Wk 4 Exercises
+nhanes_data <- import(here("data", "cleaned_nhanes.csv"))
+
+nrow(nhanes_data)
 
