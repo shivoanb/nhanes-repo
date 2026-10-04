@@ -1,0 +1,211 @@
+---
+title: "Assignment_Wk3_2026-09-29"
+author: "Shivoan Balakumar"
+date: "2026-09-29"
+output: pdf_document
+theme: lumen
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo    = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+# Assignment Week 3 - BIOS640
+
+##Exercise 1
+
+Install Packages
+```{r install pacman, echo = FALSE}
+pacman::p_load(
+  here,
+  rio,
+  tidyverse,
+  viridis,
+  dplyr,
+  lubridate,
+  readr,
+  tydr,
+  readxl,
+  janitor,
+  skimr,
+  knitr,
+  kableExtra,
+  formatR,
+  gridExtra,
+  RColorBrewer,
+  cowplot,
+  ggpubr,
+  ggokabeito,
+  gghighlight,
+  rcartocolor
+)
+```
+
+Import Data
+```{r import_nhanes_data}
+#import nhanes csv data set 
+nhanes_data <- import(here("data", "cleaned_nhanes.csv"))
+
+#provides dimensions - number of rows and columns
+dim(nhanes_data)
+
+# Shows the structure of data and data types
+str(nhanes_data)
+
+```
+
+View Data
+```{r view_data, eval = FALSE}
+#provides dimensions - number of rows and columns
+dim(nhanes_data)
+
+# Shows the structure of data and data types
+str(nhanes_data)
+```
+
+Plot 1 - Histogram of Age by Gender
+```{r histogram_age_gender}
+ggplot(data = nhanes_data, aes(x = age, fill = gender)) +
+  geom_histogram(binwidth = 5, position = "dodge") +
+  scale_fill_brewer(palette = "Dark2") +
+  labs(x = "Age (years)") +
+  theme(text = element_text(size = 12))
+```
+Plot 2 - Histogram of Ethnicity by Gender
+```{r histogram_ethnicity_gender}
+ggplot(data = nhanes_data, aes(x = ethnicity_2, fill = gender)) +
+  geom_bar(position = "fill") +
+  scale_fill_brewer(palette = "Dark2") +
+  labs(x = "Ethnicity") +
+  theme(text = element_text(size = 12))
+
+```
+Combine Plots
+```{r combine_plots}
+#Create Plots
+p1 <- ggplot(data = nhanes_data, aes(x = age, fill = gender)) +
+  geom_histogram(binwidth = 5, position = "dodge") +
+  scale_fill_brewer(palette = "Dark2") +
+  labs(x = "Age (years)") +
+  theme(text = element_text(size = 12))
+
+p2 <- ggplot(data = nhanes_data, aes(x = ethnicity_2, fill = gender)) +
+  geom_bar(position = "fill") +
+  scale_fill_brewer(palette = "Dark2") +
+  labs(x = "Ethnicity") +
+  theme(text = element_text(size = 12))
+
+# combine the plots with plot_grid
+plot_grid(p1, p2,
+           rel_widths = c(6, 8)
+ )
+
+# combine the plots with ggarrange
+ggarrange(p1, p2, common.legend = TRUE, legend = "top")
+  
+
+```
+Combining Plots with ggarrange looks better than combining with plot_grid because
+it creates a common legend, leaving more width for the plots themselves.
+
+
+
+## Exercise 2
+
+Plotting Age, Gender and Ethnicity_1 variables from NHANES
+```{r plot_ethnicity_1}
+plot_1 <- ggplot(nhanes_data, aes(x = age, fill = gender)) +
+  geom_histogram(binwidth = 5, position = "dodge") +
+  facet_wrap(~ ethnicity_1) +
+  labs(
+    title = "Age Distribution by Gender and Ethnicity_1 Variable in NHANES Data",
+    x = "Age (years)",
+    y = "Number of participants")
+plot_1
+```
+Plotting Age, Gender and Ethnicity_2 variables from NHANES
+```{r plot_ethnicity_2}
+plot_2 <- ggplot(nhanes_data, aes(x = age, fill = gender)) +
+  geom_histogram(binwidth = 5, position = "dodge") +
+  facet_wrap(~ ethnicity_2) +
+  labs(
+    title = "Age Distribution by Gender and Ethnicity_2 Variable in NHANES Data",
+    x = "Age (years)",
+    y = "Number of participants")
+plot_2
+```
+
+
+Showing distribution and missing Values of Age, Gender and Ethnicity variables
+```{r}
+summary(nhanes_data[c("age", "gender", "ethnicity_1", "ethnicity_2")])
+```
+The Ethnicity_2 Variable is more appropriate to keep because it provides more 
+information and specificity on ethnicity in the study population 
+(i.e., the "Asian" sub-population).
+
+Saving the Two Plots
+```{r}
+ggsave(
+  filename = here("figures", "plot1.png"),
+  plot = plot_1,
+  width = 8,
+  height = 6
+)
+
+ggsave(
+  filename = here("figures", "plot2.png"),
+  plot = plot_2,
+  width = 8,
+  height = 6
+)
+```
+
+##Exercise 3
+
+The colleagues figure does not have a title, units for weight. It also doesn't 
+easily demonstrate any "key messages" about the overall effectiveness of the diet.
+
+This chart could be improved by measuring how much each participants weight changes
+relatively compared to their baseline weight at week 0. That will provide more info 
+on the diet's overall effect/participant weight change trends.
+
+Creating New Columns for new plot demonstrating weight change from baseline at Week0
+```{r new_data}
+#importing data
+diet_data <- import(here("data", "diet.csv"))
+
+# Shows the structure of data 
+str(diet_data)
+
+#Creating new column for weight change from baseline at Week 0
+diet_new <- diet_data %>%
+  group_by(Participant) %>%
+  mutate(
+    baseline_weight = Weight[Week == 0],
+    weight_change = Weight - baseline_weight
+  )
+# View new data
+view(diet_new)
+```
+
+Creating new chart on diet data demonstrating weight change from baseline at Week0
+```{r new_plot}
+ggplot(diet_new, aes(
+  x = Week,
+  y = weight_change,
+  colour = factor(Participant)
+)) +
+  geom_point() +
+    labs(
+    title = "New Diet Reduces Weight for Most Participants Over 16 Weeks",
+    x = "Week",
+    y = "Weight Change from Week 0",
+    colour = "Participant"
+  )
+```
+
