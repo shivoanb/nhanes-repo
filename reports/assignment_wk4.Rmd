@@ -1,5 +1,5 @@
 ---
-title: "Assignment_Wk3_2026-09-29"
+title: "Assignment_Wk4_2026-10-04"
 author: "Shivoan Balakumar"
 date: "2026-09-29"
 output: 
@@ -18,9 +18,9 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Assignment Week 3 - BIOS640
+# Assignment Week 4 - BIOS640
 
-##Exercise 1
+## Exercise 1
 
 Install Packages
 ```{r install_pacman, echo = FALSE}
@@ -45,7 +45,8 @@ pacman::p_load(
   ggpubr,
   ggokabeito,
   gghighlight,
-  rcartocolor
+  rcartocolor,
+  DT
 )
 ```
 
@@ -127,6 +128,15 @@ it creates a common legend, leaving more width for the plots themselves.
 
 ## Exercise 2
 
+### Explore the NHANES Dataset
+```{r interactive_table}
+DT::datatable(
+  nhanes_data,
+  options = list(scrollX = TRUE)
+)
+```
+
+
 Plotting Age, Gender and Ethnicity_1 variables from NHANES
 ```{r plot_ethnicity_1}
 plot_1 <- ggplot(nhanes_data, aes(x = age, fill = gender)) +
@@ -176,7 +186,7 @@ ggsave(
 )
 ```
 
-##Exercise 3
+## Exercise 3
 
 The colleagues figure does not have a title, units for weight. It also doesn't 
 easily demonstrate any "key messages" about the overall effectiveness of the diet.
@@ -221,7 +231,7 @@ ggplot(diet_new, aes(
 ```
 
 
-##Exercise 4
+## Exercise 4
 
 Exploring relationships between age, gender and SPB
 ```{r avg_SPB}
