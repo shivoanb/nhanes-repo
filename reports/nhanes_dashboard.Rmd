@@ -1,0 +1,108 @@
+---
+title: "NHANES Dashboard"
+author: "Shivoan Balakumar"
+date: "2026-10-05"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo    = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+
+#Load packages
+pacman::p_load(
+  here,
+  rio,
+  tidyverse,
+  viridis,
+  dplyr,
+  lubridate,
+  readr,
+  tydr,
+  readxl,
+  janitor,
+  skimr,
+  knitr,
+  kableExtra,
+  formatR,
+  gridExtra,
+  RColorBrewer,
+  cowplot,
+  ggpubr,
+  ggokabeito,
+  gghighlight,
+  rcartocolor,
+  DT,
+  flexdashboard
+)
+
+# Import Dataset
+nhanes_data <- import(here("data", "cleaned_nhanes.csv"))  
+
+```
+
+
+Row {data-height=650}
+-------------------------------------
+
+### NHANES Sample
+
+```{r histogram_age_gender}
+ggplot(data = nhanes_data, aes(x = age, fill = gender)) +
+  geom_histogram(binwidth = 5, position = "dodge") +
+  scale_fill_brewer(palette = "Dark2") +
+  labs(x = "Age (years)") +
+  theme(text = element_text(size = 12))
+
+```
+
+
+Row {data-height=350}
+-------------------------------------
+
+### Percentage Age 21 or Older
+
+```{r age_gauge}
+percent_21plus <- mean(nhanes_data$age >= 21, na.rm = TRUE) * 100
+
+gauge(
+  percent_21plus,
+  min = 0,
+  max = 100,
+  sectors = gaugeSectors(
+    success = c(50, 100),
+    warning = c(0, 50)
+  )
+)
+
+```
+  
+
+### Percentage with Average SBP Above 120 mm Hg
+
+```{r sbp_valuebox}
+nhanes_data <- nhanes_data %>%
+  mutate(
+    avg_sbp = rowMeans(
+      select(., systolic_bp_1, systolic_bp_2, systolic_bp_3, systolic_bp_4),
+      na.rm = TRUE
+    ),
+    avg_sbp = ifelse(is.nan(avg_sbp), NA, avg_sbp)
+  )
+
+percent_sbp120 <- mean(nhanes_data$avg_sbp > 120, na.rm = TRUE) * 100
+
+valueBox(
+  paste0(round(percent_sbp120, 1), "%"),
+  caption = "Average SBP Above 120 mm Hg",
+  color = "primary"
+)
+
+```
+
+
