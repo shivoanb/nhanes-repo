@@ -1,0 +1,147 @@
+---
+title: "NHANES Dataset Summary"
+author: "Shivoan Balakumar"
+date: "2026-10-05"
+output: pdf_document
+---
+## Introduction
+The National Health and Nutrition Examination Survey (NHANES) collects information on the health and nutritional status of the population. This report provides a brief description of the cleaned NHANES dataset used in this analysis, focusing on sample size, gender, ethnicity, and systolic blood pressure across the three survey waves.
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo    = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+
+#Load packages
+pacman::p_load(
+  here,
+  rio,
+  tidyverse,
+  viridis,
+  dplyr,
+  lubridate,
+  readr,
+  tydr,
+  readxl,
+  janitor,
+  skimr,
+  knitr,
+  kableExtra,
+  formatR,
+  gridExtra,
+  RColorBrewer,
+  cowplot,
+  ggpubr,
+  ggokabeito,
+  gghighlight,
+  rcartocolor,
+  DT,
+  flexdashboard
+)
+
+# Import Dataset
+nhanes_data <- import(here("data", "cleaned_nhanes.csv"))  
+```
+
+## Sample Characteristics
+Sample size decreased across the three waves, from 10,175 participants in 2015 to 9,254 in 2017. The gender distribution remained very similar across waves, with males accounting for approximately 49% of participants in each wave.
+The ethnic composition of the sample varied across waves. White participants represented the largest group in each wave, although their proportion decreased from 36.1% in 2015 to 34.0% in 2017. The proportions of several other groups also changed across the three waves, illustrating differences in the composition of the samples over time.
+Average systolic blood pressure increased across the three waves. Mean average SBP increased from approximately 118 mm Hg in 2015 to 122 mm Hg in 2017, while the median increased from 115 to 118 mm Hg. The standard deviation also increased, suggesting somewhat greater variability in average SBP in 2017.
+
+```{r sample_summary}
+sample_summary <- nhanes_data %>%
+  group_by(wave_id) %>%
+  summarise(
+    sample_size = n(),
+    males = sum(gender == "Male", na.rm = TRUE),
+    percent_male = mean(gender == "Male", na.rm = TRUE) * 100
+  ) %>%
+  mutate(
+    male_n_percent = paste0(males, " (", round(percent_male, 1), "%)")
+  )
+
+sample_summary %>%
+  select(wave_id, sample_size, male_n_percent) %>%
+  kable(
+    format = "latex",
+    booktabs = TRUE,
+    col.names = c("Wave", "Sample Size", "Male, n (%)"),
+    caption = "Sample Characteristics by NHANES Wave"
+  ) %>%
+  kable_styling(
+    latex_options = "hold_position"
+  )
+
+ethnicity_summary <- nhanes_data %>%
+  group_by(wave_id, ethnicity_2) %>%
+  summarise(
+    n = n(),
+    .groups = "drop"
+  ) %>%
+  group_by(wave_id) %>%
+  mutate(
+    percent = n / sum(n) * 100,
+    n_percent = paste0(n, " (", round(percent, 1), "%)")
+  )
+
+ethnicity_summary %>%
+  select(wave_id, ethnicity_2, n_percent) %>%
+  kable(
+    format = "latex",
+    booktabs = TRUE,
+    col.names = c("Wave", "Ethnicity", "n (%)"),
+    caption = "Ethnicity Distribution by NHANES Wave"
+  ) %>%
+  kable_styling(
+    latex_options = "hold_position"
+  )
+
+#Create Avg SPB
+nhanes_data <- nhanes_data %>%
+  mutate(
+    avg_sbp = rowMeans(
+      select(., systolic_bp_1, systolic_bp_2, systolic_bp_3, systolic_bp_4),
+      na.rm = TRUE
+    ),
+    avg_sbp = ifelse(is.nan(avg_sbp), NA, avg_sbp)
+  )
+
+#SPB Summary
+sbp_summary <- nhanes_data %>%
+  group_by(wave_id) %>%
+  summarise(
+    minimum = min(avg_sbp, na.rm = TRUE),
+    maximum = max(avg_sbp, na.rm = TRUE),
+    median = median(avg_sbp, na.rm = TRUE),
+    mean = mean(avg_sbp, na.rm = TRUE),
+    sd = sd(avg_sbp, na.rm = TRUE)
+  )
+
+sbp_summary %>%
+  mutate(
+    across(
+      c(minimum, maximum, median, mean, sd),
+      ~ round(.x, 1)
+    )
+  ) %>%
+  kable(
+    format = "latex",
+    booktabs = TRUE,
+    col.names = c(
+      "Wave",
+      "Minimum",
+      "Maximum",
+      "Median",
+      "Mean",
+      "SD"
+    ),
+    caption = "Summary of Average Systolic Blood Pressure by NHANES Wave"
+  ) %>%
+  kable_styling(
+    latex_options = "hold_position"
+  )
+
+```
+
