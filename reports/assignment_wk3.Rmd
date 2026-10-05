@@ -2,8 +2,12 @@
 title: "Assignment_Wk3_2026-09-29"
 author: "Shivoan Balakumar"
 date: "2026-09-29"
-output: pdf_document
-theme: lumen
+output: 
+  html_document:
+    theme: lumen
+    highlight: pygments
+    toc: true
+    toc_float: true
 ---
 
 ```{r setup, include = FALSE}
@@ -19,7 +23,7 @@ knitr::opts_chunk$set(
 ##Exercise 1
 
 Install Packages
-```{r install pacman, echo = FALSE}
+```{r install_pacman, echo = FALSE}
 pacman::p_load(
   here,
   rio,
@@ -66,6 +70,9 @@ dim(nhanes_data)
 # Shows the structure of data and data types
 str(nhanes_data)
 ```
+### Figures {.tabset}
+
+#### Individual Figures
 
 Plot 1 - Histogram of Age by Gender
 ```{r histogram_age_gender}
@@ -75,6 +82,7 @@ ggplot(data = nhanes_data, aes(x = age, fill = gender)) +
   labs(x = "Age (years)") +
   theme(text = element_text(size = 12))
 ```
+
 Plot 2 - Histogram of Ethnicity by Gender
 ```{r histogram_ethnicity_gender}
 ggplot(data = nhanes_data, aes(x = ethnicity_2, fill = gender)) +
@@ -84,6 +92,9 @@ ggplot(data = nhanes_data, aes(x = ethnicity_2, fill = gender)) +
   theme(text = element_text(size = 12))
 
 ```
+
+#### Combined Figures
+
 Combine Plots
 ```{r combine_plots}
 #Create Plots
@@ -208,4 +219,23 @@ ggplot(diet_new, aes(
     colour = "Participant"
   )
 ```
+
+
+##Exercise 4
+
+Exploring relationships between age, gender and SPB
+```{r avg_SPB}
+nhanes_data <- nhanes_data %>%
+  mutate(
+    avg_sbp = rowMeans(
+      select(., systolic_bp_1, systolic_bp_2, systolic_bp_3, systolic_bp_4),
+      na.rm = TRUE
+    ),
+    avg_sbp = ifelse(is.nan(avg_sbp), NA, avg_sbp)
+  )
+
+# Shows the structure of updated data 
+str(nhanes_data)
+```
+
 
